@@ -36,45 +36,24 @@ public class ManualConditionBug22005 extends HudsonTestCase {
         return prom0;
 	}
 	
+	public void testPromotionProcessChain() throws Exception {
+        FreeStyleProject p1 = createFreeStyleProject();
+        FreeStyleProject p2 = createFreeStyleProject();
+        
+        JobPropertyImpl promotion1 = new JobPropertyImpl(p1);
+        p1.addProperty(promotion1);
+        PromotionProcess promo1 = promotion1.addProcess("promo1");
+        promo1.conditions.add(new SelfPromotionCondition(false));
+        
+        JobPropertyImpl promotion2 = new JobPropertyImpl(p1);
+        p1.addProperty(promotion2);
+        PromotionProcess promo2 = promotion2.addProcess("promo1");
+        promo2.conditions.add(new SelfPromotionCondition(false));
+        
+	}
+	
 	public void testPromotionProcess() throws Exception {
-        FreeStyleProject p = createFreeStyleProject();
-        
-        ExtensionList<Descriptor> list=Jenkins.getInstance().getExtensionList(Descriptor.class);
-        list.add(new JobPropertyImpl.DescriptorImpl(JobPropertyImpl.class));
-        JobPropertyImpl base =  new JobPropertyImpl(p);
-        p.addProperty(base);
-        PromotionProcess prom0=createPromotionProcess(base, "PROM0");
-        ManualCondition prom0Condition=prom0.conditions.get(ManualCondition.class);
-        PromotionProcess prom1=createPromotionProcess(base, "PROM1");
-        ManualCondition prom1Condition=prom1.conditions.get(ManualCondition.class);
-        PromotionProcess prom2=createPromotionProcess(base, "PROM2");
-        ManualCondition prom2Condition=prom2.conditions.get(ManualCondition.class);
-        
-        FreeStyleBuild b1 = assertBuildStatusSuccess(p.scheduleBuild2(0));
-        Promotion p0b1=assertBuildStatusSuccess(prom0Condition.approve(b1, prom0));
-        assertEquals(2,p0b1.getParameterValues().size());
-        assertEquals(2,p0b1.getParameterDefinitionsWithValue().size());
-        
-        Promotion p1b1=assertBuildStatusSuccess(prom1Condition.approve(b1, prom1));
-        assertEquals(2,p1b1.getParameterValues().size());
-        assertEquals(2,p1b1.getParameterDefinitionsWithValue().size());
-        
-        Promotion p2b1=assertBuildStatusSuccess(prom2Condition.approve(b1, prom2));
-        assertEquals(2,p2b1.getParameterValues().size());
-        assertEquals(2,p2b1.getParameterDefinitionsWithValue().size());
-        
-        List<ManualApproval> approvals=b1.getActions(ManualApproval.class);
-        assertEquals(3, approvals.size());
-        
-        PromotedBuildAction promBuildAction=b1.getAction(PromotedBuildAction.class);
-        List<Status> statuses=promBuildAction.getPromotions();
-        assertEquals(3, statuses.size());
-        
-        for (Status status:statuses){
-        	Promotion lastBuild=status.getLast();
-        	List<ParameterDefinition> lastBuildParameters=lastBuild.getParameterDefinitionsWithValue();
-        	assertEquals(2, lastBuildParameters.size());
-        }
+
         
 	}
     public void testPromotionProcessViaWebClient() throws Exception {
